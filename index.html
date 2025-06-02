@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operating Systems Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .question-container {
+            display: none;
+        }
+        
+        .question-container.active {
+            display: block;
+        }
+        
+        .correct-answer {
+            background-color: #10b981 !important;
+            color: white !important;
+        }
+        
+        .wrong-answer {
+            background-color: #ef4444 !important;
+            color: white !important;
+        }
+        
+        .option-button {
+            transition: all 0.3s ease;
+        }
+        
+        .option-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">Operating Systems Quiz</h1>
+            <p class="text-gray-600">Test your knowledge of Operating Systems and RTOS concepts</p>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-sm text-gray-600">Progress</span>
+                <span class="text-sm text-gray-600" id="progress-text">1 / 106</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+                <div class="bg-blue-600 h-3 rounded-full transition-all duration-300" id="progress-bar" style="width: 0.94%"></div>
+            </div>
+        </div>
+
+        <!-- Quiz Container -->
+        <div class="max-w-4xl mx-auto">
+            <!-- Question 1 -->
+            <div class="question-container active bg-white rounded-lg shadow-lg p-6 mb-6" data-question="1">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Question 1</h2>
+                <p class="text-lg mb-6 text-gray-700">What is a key advantage of RTOS?</p>
+                <div class="space-y-3">
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="A">
+                        A. High resource consumption
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="B">
+                        B. Limited task switching
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="C">
+                        C. Maximum utilization of devices
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="D">
+                        D. Complex algorithms
+                    </button>
+                </div>
+                <div class="mt-6 hidden" id="feedback-1">
+                    <div class="p-4 bg-green-100 border border-green-300 rounded-lg">
+                        <p class="text-green-800 font-medium">Correct Answer: C. Maximum utilization of devices</p>
+                        <p class="text-green-700 mt-2">RTOS provides maximum utilization of devices and resources through efficient scheduling and real-time capabilities.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="question-container bg-white rounded-lg shadow-lg p-6 mb-6" data-question="2">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Question 2</h2>
+                <p class="text-lg mb-6 text-gray-700">What is the primary purpose of an Operating System (OS)?</p>
+                <div class="space-y-3">
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="A">
+                        A. To access the internet
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="B">
+                        B. To compile programs
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="C">
+                        C. To edit documents
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="D">
+                        D. To manage hardware and software resources
+                    </button>
+                </div>
+                <div class="mt-6 hidden" id="feedback-2">
+                    <div class="p-4 bg-green-100 border border-green-300 rounded-lg">
+                        <p class="text-green-800 font-medium">Correct Answer: D. To manage hardware and software resources</p>
+                        <p class="text-green-700 mt-2">The primary purpose of an OS is to manage and coordinate hardware and software resources efficiently.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="question-container bg-white rounded-lg shadow-lg p-6 mb-6" data-question="3">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Question 3</h2>
+                <p class="text-lg mb-6 text-gray-700">What is a Real-Time Operating System (RTOS)?</p>
+                <div class="space-y-3">
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="A">
+                        A. An OS designed for gaming performance
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="B">
+                        B. An OS with no timing constraints
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="C">
+                        C. An OS that supports web applications
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="D">
+                        D. An OS that responds within a defined time limit
+                    </button>
+                </div>
+                <div class="mt-6 hidden" id="feedback-3">
+                    <div class="p-4 bg-green-100 border border-green-300 rounded-lg">
+                        <p class="text-green-800 font-medium">Correct Answer: D. An OS that responds within a defined time limit</p>
+                        <p class="text-green-700 mt-2">RTOS is designed to respond to events within a predictable and defined time constraint.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 4 -->
+            <div class="question-container bg-white rounded-lg shadow-lg p-6 mb-6" data-question="4">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Question 4</h2>
+                <p class="text-lg mb-6 text-gray-700">What is the main function of the dispatcher in an operating system?</p>
+                <div class="space-y-3">
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="A">
+                        A. To manage memory allocation
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="B">
+                        B. To assign I/O devices to processes
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="C">
+                        C. To give CPU control to the selected process
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="D">
+                        D. To handle user input
+                    </button>
+                </div>
+                <div class="mt-6 hidden" id="feedback-4">
+                    <div class="p-4 bg-green-100 border border-green-300 rounded-lg">
+                        <p class="text-green-800 font-medium">Correct Answer: C. To give CPU control to the selected process</p>
+                        <p class="text-green-700 mt-2">The dispatcher's main function is to give CPU control to the process selected by the scheduler.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 5 -->
+            <div class="question-container bg-white rounded-lg shadow-lg p-6 mb-6" data-question="5">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Question 5</h2>
+                <p class="text-lg mb-6 text-gray-700">What is the primary use case for Soft RTOS?</p>
+                <div class="space-y-3">
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="A">
+                        A. Systems where occasional delays are tolerable
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="B">
+                        B. Systems where delays are unacceptable
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="C">
+                        C. Systems requiring ultra-low latency
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="D">
+                        D. Systems with no timing constraints
+                    </button>
+                </div>
+                <div class="mt-6 hidden" id="feedback-5">
+                    <div class="p-4 bg-green-100 border border-green-300 rounded-lg">
+                        <p class="text-green-800 font-medium">Correct Answer: A. Systems where occasional delays are tolerable</p>
+                        <p class="text-green-700 mt-2">Soft RTOS is used in systems where missing deadlines occasionally is acceptable and doesn't cause system failure.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 6 -->
+            <div class="question-container bg-white rounded-lg shadow-lg p-6 mb-6" data-question="6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Question 6</h2>
+                <p class="text-lg mb-6 text-gray-700">In an operating system, what is the kernel responsible for?</p>
+                <div class="space-y-3">
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="A">
+                        A. Managing hardware and system resources
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="B">
+                        B. Providing a graphical user interface
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="C">
+                        C. Running applications directly
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="D">
+                        D. Connecting external devices
+                    </button>
+                </div>
+                <div class="mt-6 hidden" id="feedback-6">
+                    <div class="p-4 bg-green-100 border border-green-300 rounded-lg">
+                        <p class="text-green-800 font-medium">Correct Answer: A. Managing hardware and system resources</p>
+                        <p class="text-green-700 mt-2">The kernel is the core component responsible for managing hardware and system resources.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 7 -->
+            <div class="question-container bg-white rounded-lg shadow-lg p-6 mb-6" data-question="7">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Question 7</h2>
+                <p class="text-lg mb-6 text-gray-700">Multitasking system where multiple users share CPU.</p>
+                <div class="space-y-3">
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="A">
+                        A. Real-Time OS
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="B">
+                        B. Batch OS
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="C">
+                        C. Time-Sharing OS
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="D">
+                        D. Distributed OS
+                    </button>
+                </div>
+                <div class="mt-6 hidden" id="feedback-7">
+                    <div class="p-4 bg-green-100 border border-green-300 rounded-lg">
+                        <p class="text-green-800 font-medium">Correct Answer: C. Time-Sharing OS</p>
+                        <p class="text-green-700 mt-2">Time-sharing OS allows multiple users to share CPU time through multitasking.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 8 -->
+            <div class="question-container bg-white rounded-lg shadow-lg p-6 mb-6" data-question="8">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Question 8</h2>
+                <p class="text-lg mb-6 text-gray-700">What is the key advantage of a distributed operating system?</p>
+                <div class="space-y-3">
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="A">
+                        A. It allows multiple computers to function as a single system
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="B">
+                        B. It reduces power consumption
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="C">
+                        C. It improves GUI performance
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="D">
+                        D. It eliminates the need for a file system
+                    </button>
+                </div>
+                <div class="mt-6 hidden" id="feedback-8">
+                    <div class="p-4 bg-green-100 border border-green-300 rounded-lg">
+                        <p class="text-green-800 font-medium">Correct Answer: A. It allows multiple computers to function as a single system</p>
+                        <p class="text-green-700 mt-2">Distributed OS enables multiple computers to work together as a unified system.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 9 -->
+            <div class="question-container bg-white rounded-lg shadow-lg p-6 mb-6" data-question="9">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Question 9</h2>
+                <p class="text-lg mb-6 text-gray-700">Which RTOS task property specifies the memory reserved for its execution context?</p>
+                <div class="space-y-3">
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="A">
+                        A. Stack size
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="B">
+                        B. Priority
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="C">
+                        C. State
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="D">
+                        D. Control Block
+                    </button>
+                </div>
+                <div class="mt-6 hidden" id="feedback-9">
+                    <div class="p-4 bg-green-100 border border-green-300 rounded-lg">
+                        <p class="text-green-800 font-medium">Correct Answer: A. Stack size</p>
+                        <p class="text-green-700 mt-2">Stack size specifies the memory reserved for a task's execution context.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 10 -->
+            <div class="question-container bg-white rounded-lg shadow-lg p-6 mb-6" data-question="10">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Question 10</h2>
+                <p class="text-lg mb-6 text-gray-700">Which of the following best describes a program?</p>
+                <div class="space-y-3">
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="A">
+                        A. A lightweight process
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="B">
+                        B. A system call
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="C">
+                        C. An executing instance of code
+                    </button>
+                    <button class="option-button w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50" data-option="D">
+                        D. A passive entity stored on disk
+                    </button>
+                </div>
+                <div class="mt-6 hidden" id="feedback-10">
+                    <div class="p-4 bg-green-100 border border-green-300 rounded-lg">
+                        <p class="text-green-800 font-medium">Correct Answer: D. A passive entity stored on disk</p>
+                        <p class="text-green-700 mt-2">A program is a passive entity stored on disk, while a process is the executing instance.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="flex justify-between items-center mt-8">
+                <button id="prev-btn" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Previous
+                </button>
+                <button id="next-btn" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    Next
+                </button>
+                <button id="finish-btn" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors hidden">
+                    Finish Quiz
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Modal -->
+        <div id="results-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+                <h2 class="text-2xl font-bold mb-4 text-center">Quiz Complete!</h2>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-blue-600 mb-2" id="final-score">0/106</div>
+                    <div class="text-lg text-gray-600 mb-4" id="percentage">0%</div>
+                    <div class="mb-6">
+                        <div class="text-sm text-gray-600 mb-2">Performance</div>
+                        <div class="w-full bg-gray-200 rounded-full h-4">
+                            <div class="bg-blue-600 h-4 rounded-full transition-all duration-500" id="final-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <button id="restart-btn" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        Restart Quiz
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Quiz data with correct answers
+        const quizData = [{
+                question: 1,
+                correct: 'C',
+                explanation: 'RTOS provides maximum utilization of devices and resources through efficient scheduling and real-time capabilities.'
+            }, {
+                question: 2,
+                correct: 'D',
+                explanation: 'The primary purpose of an OS is to manage and coordinate hardware and software resources efficiently.'
+            }, {
+                question: 3,
+                correct: 'D',
+                explanation: 'RTOS is designed to respond to events within a predictable and defined time constraint.'
+            }, {
+                question: 4,
+                correct: 'C',
+                explanation: 'The dispatcher\'s main function is to give CPU control to the process selected by the scheduler.'
+            }, {
+                question: 5,
+                correct: 'A',
+                explanation: 'Soft RTOS is used in systems where missing deadlines occasionally is acceptable and doesn\'t cause system failure.'
+            },
+            // Add more questions here...
+        ];
+
+        let currentQuestion = 1;
+        let totalQuestions = 106;
+        let userAnswers = {};
+        let score = 0;
+
+        // Initialize quiz
+        function initQuiz() {
+            updateProgressBar();
+            updateNavigationButtons();
+        }
+
+        // Update progress bar
+        function updateProgressBar() {
+            const progress = (currentQuestion / totalQuestions) * 100;
+            document.getElementById('progress-bar').style.width = progress + '%';
+            document.getElementById('progress-text').textContent = `${currentQuestion} / ${totalQuestions}`;
+        }
+
+        // Update navigation buttons
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const finishBtn = document.getElementById('finish-btn');
+
+            prevBtn.disabled = currentQuestion === 1;
+
+            if (currentQuestion === totalQuestions) {
+                nextBtn.classList.add('hidden');
+                finishBtn.classList.remove('hidden');
+            } else {
+                nextBtn.classList.remove('hidden');
+                finishBtn.classList.add('hidden');
+            }
+        }
+
+        // Show question
+        function showQuestion(questionNum) {
+            // Hide all questions
+            document.querySelectorAll('.question-container').forEach(q => {
+                q.classList.remove('active');
+            });
+
+            // Show current question
+            const currentQuestionEl = document.querySelector(`[data-question="${questionNum}"]`);
+            if (currentQuestionEl) {
+                currentQuestionEl.classList.add('active');
+            }
+
+            updateProgressBar();
+            updateNavigationButtons();
+        }
+
+        // Handle option selection
+        function handleOptionClick(questionNum, selectedOption, button) {
+            const questionData = quizData.find(q => q.question === questionNum);
+            if (!questionData) return;
+
+            // Remove previous selections
+            const questionContainer = document.querySelector(`[data-question="${questionNum}"]`);
+            questionContainer.querySelectorAll('.option-button').forEach(btn => {
+                btn.classList.remove('correct-answer', 'wrong-answer');
+            });
+
+            // Store user answer
+            userAnswers[questionNum] = selectedOption;
+
+            // Show correct/incorrect feedback
+            const isCorrect = selectedOption === questionData.correct;
+
+            if (isCorrect) {
+                button.classList.add('correct-answer');
+            } else {
+                button.classList.add('wrong-answer');
+                // Highlight correct answer
+                const correctButton = questionContainer.querySelector(`[data-option="${questionData.correct}"]`);
+                correctButton.classList.add('correct-answer');
+            }
+
+            // Show feedback
+            const feedback = document.getElementById(`feedback-${questionNum}`);
+            if (feedback) {
+                feedback.classList.remove('hidden');
+            }
+
+            // Disable all options
+            questionContainer.querySelectorAll('.option-button').forEach(btn => {
+                btn.disabled = true;
+                btn.style.cursor = 'not-allowed';
+            });
+        }
+
+        // Calculate final score
+        function calculateScore() {
+            score = 0;
+            quizData.forEach(q => {
+                if (userAnswers[q.question] === q.correct) {
+                    score++;
+                }
+            });
+            return score;
+        }
+
+        // Show results
+        function showResults() {
+            const finalScore = calculateScore();
+            const percentage = Math.round((finalScore / totalQuestions) * 100);
+
+            document.getElementById('final-score').textContent = `${finalScore}/${totalQuestions}`;
+            document.getElementById('percentage').textContent = `${percentage}%`;
+            document.getElementById('final-progress').style.width = percentage + '%';
+
+            document.getElementById('results-modal').classList.remove('hidden');
+            document.getElementById('results-modal').classList.add('flex');
+        }
+
+        // Restart quiz
+        function restartQuiz() {
+            currentQuestion = 1;
+            userAnswers = {};
+            score = 0;
+
+            // Reset all questions
+            document.querySelectorAll('.question-container').forEach(q => {
+                q.querySelectorAll('.option-button').forEach(btn => {
+                    btn.classList.remove('correct-answer', 'wrong-answer');
+                    btn.disabled = false;
+                    btn.style.cursor = 'pointer';
+                });
+                q.querySelectorAll('[id^="feedback-"]').forEach(feedback => {
+                    feedback.classList.add('hidden');
+                });
+            });
+
+            // Hide results modal
+            document.getElementById('results-modal').classList.add('hidden');
+            document.getElementById('results-modal').classList.remove('flex');
+
+            // Show first question
+            showQuestion(1);
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            initQuiz();
+
+            // Option click handlers
+            document.querySelectorAll('.option-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    if (this.disabled) return;
+
+                    const questionNum = parseInt(this.closest('.question-container').dataset.question);
+                    const selectedOption = this.dataset.option;
+                    handleOptionClick(questionNum, selectedOption, this);
+                });
+            });
+
+            // Navigation handlers
+            document.getElementById('prev-btn').addEventListener('click', function() {
+                if (currentQuestion > 1) {
+                    currentQuestion--;
+                    showQuestion(currentQuestion);
+                }
+            });
+
+            document.getElementById('next-btn').addEventListener('click', function() {
+                if (currentQuestion < totalQuestions) {
+                    currentQuestion++;
+                    showQuestion(currentQuestion);
+                }
+            });
+
+            document.getElementById('finish-btn').addEventListener('click', function() {
+                showResults();
+            });
+
+            document.getElementById('restart-btn').addEventListener('click', function() {
+                restartQuiz();
+            });
+        });
+    </script>
+</body>
+
+</html>

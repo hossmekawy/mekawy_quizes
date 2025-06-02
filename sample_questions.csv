@@ -1,0 +1,6 @@
+question,option_a,option_b,option_c,option_d,correct_answer,explanation
+"What is the capital of France?","London","Berlin","Paris","Madrid","C","Paris is the capital and largest city of France."
+"Which programming language is known for web development?","Python","JavaScript","C++","Assembly","B","JavaScript is primarily used for web development and runs in browsers."
+"What does HTML stand for?","Hyperlink Text Markup Language","HyperText Markup Language","High Tech Modern Language","Home Tool Markup Language","B","HTML stands for HyperText Markup Language, used for creating web pages."
+"Which planet is closest to the Sun?","Venus","Earth","Mercury","Mars","C","Mercury is the closest planet to the Sun in our solar system."
+"What is 2 + 2?","3","4","5","6","B","Basic arithmetic: 2 + 2 equals 4."
