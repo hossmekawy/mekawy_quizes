@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, make_response
 import pandas as pd
 import re
 import os
@@ -6,6 +6,14 @@ import sqlite3
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+from datetime import datetime
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from io import BytesIO
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'
@@ -27,10 +35,17 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE,
             description TEXT,
+            show_answers_public BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+
+    # Add show_answers_public column to existing quizzes table if it doesn't exist
+    try:
+        cursor.execute('ALTER TABLE quizzes ADD COLUMN show_answers_public BOOLEAN DEFAULT FALSE')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
 
     # Create questions table
     cursor.execute('''
@@ -160,8 +175,160 @@ def clear_quiz_questions(quiz_id):
     conn.commit()
     conn.close()
 
+def update_quiz_settings(quiz_id, show_answers_public):
+    conn = get_db_connection()
+    conn.execute(
+        'UPDATE quizzes SET show_answers_public = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        (show_answers_public, quiz_id)
+    )
+    conn.commit()
+    conn.close()
+
 # Initialize database on startup
 init_db()
+
+# PDF Generation Functions
+def generate_quiz_answers_pdf(quiz, questions):
+    """Generate a premium-looking PDF with quiz questions and answers"""
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
+
+    # Container for the 'Flowable' objects
+    elements = []
+
+    # Define styles
+    styles = getSampleStyleSheet()
+
+    # Custom styles
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        spaceAfter=30,
+        alignment=TA_CENTER,
+        textColor=colors.HexColor('#2563eb')
+    )
+
+    subtitle_style = ParagraphStyle(
+        'CustomSubtitle',
+        parent=styles['Heading2'],
+        fontSize=16,
+        spaceAfter=20,
+        alignment=TA_CENTER,
+        textColor=colors.HexColor('#64748b')
+    )
+
+    question_style = ParagraphStyle(
+        'QuestionStyle',
+        parent=styles['Heading3'],
+        fontSize=14,
+        spaceAfter=12,
+        spaceBefore=20,
+        textColor=colors.HexColor('#1e293b')
+    )
+
+    option_style = ParagraphStyle(
+        'OptionStyle',
+        parent=styles['Normal'],
+        fontSize=11,
+        spaceAfter=6,
+        leftIndent=20,
+        textColor=colors.HexColor('#475569')
+    )
+
+    correct_option_style = ParagraphStyle(
+        'CorrectOptionStyle',
+        parent=styles['Normal'],
+        fontSize=11,
+        spaceAfter=6,
+        leftIndent=20,
+        textColor=colors.HexColor('#059669'),
+        backColor=colors.HexColor('#ecfdf5')
+    )
+
+    explanation_style = ParagraphStyle(
+        'ExplanationStyle',
+        parent=styles['Normal'],
+        fontSize=10,
+        spaceAfter=15,
+        leftIndent=20,
+        textColor=colors.HexColor('#6b7280'),
+        fontName='Helvetica-Oblique'
+    )
+
+    # Header
+    elements.append(Paragraph(quiz['name'], title_style))
+    elements.append(Paragraph('Answer Key & Explanations', subtitle_style))
+
+    if quiz['description']:
+        elements.append(Paragraph(quiz['description'], styles['Normal']))
+
+    elements.append(Spacer(1, 20))
+
+    # Quiz info table
+    quiz_info = [
+        ['Quiz Name:', quiz['name']],
+        ['Total Questions:', str(len(questions))],
+        ['Generated:', datetime.now().strftime('%B %d, %Y at %I:%M %p')]
+    ]
+
+    info_table = Table(quiz_info, colWidths=[2*inch, 4*inch])
+    info_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f8fafc')),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#475569')),
+        ('TEXTCOLOR', (1, 0), (1, -1), colors.HexColor('#1e293b')),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e2e8f0')),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, colors.HexColor('#f8fafc')])
+    ]))
+
+    elements.append(info_table)
+    elements.append(Spacer(1, 30))
+
+    # Questions and answers
+    for i, question in enumerate(questions, 1):
+        # Question
+        elements.append(Paragraph(f"Question {i}: {question['question']}", question_style))
+
+        # Options
+        for option in question['options']:
+            if option['letter'] == question['correct_answer']:
+                elements.append(Paragraph(f"✓ {option['letter']}. {option['text']} (Correct Answer)", correct_option_style))
+            else:
+                elements.append(Paragraph(f"{option['letter']}. {option['text']}", option_style))
+
+        # Explanation
+        if question['explanation']:
+            elements.append(Paragraph(f"Explanation: {question['explanation']}", explanation_style))
+
+        # Add some space between questions
+        if i < len(questions):
+            elements.append(Spacer(1, 15))
+
+    # Footer
+    elements.append(PageBreak())
+    footer_style = ParagraphStyle(
+        'FooterStyle',
+        parent=styles['Normal'],
+        fontSize=10,
+        alignment=TA_CENTER,
+        textColor=colors.HexColor('#9ca3af')
+    )
+    elements.append(Spacer(1, 50))
+    elements.append(Paragraph('Generated by Quiz Hub - Premium Quiz Management System', footer_style))
+    elements.append(Paragraph(f'© {datetime.now().year} Quiz Hub. All rights reserved.', footer_style))
+
+    # Build PDF
+    doc.build(elements)
+
+    # Get the value of the BytesIO buffer and return it
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
 
 # Authentication functions
 def login_required(f):
@@ -462,6 +629,59 @@ def clear_questions(quiz_id):
 def delete_question_route(question_db_id):
     delete_question(question_db_id)
     return jsonify({'success': True, 'message': 'Question deleted'})
+
+@app.route('/quiz/<int:quiz_id>/settings', methods=['POST'])
+@login_required
+def update_quiz_settings_route(quiz_id):
+    data = request.json
+    show_answers_public = data.get('show_answers_public', False)
+
+    # Verify quiz exists
+    quiz = get_quiz_by_id(quiz_id)
+    if not quiz:
+        return jsonify({'success': False, 'message': 'Quiz not found'})
+
+    update_quiz_settings(quiz_id, show_answers_public)
+    return jsonify({'success': True, 'message': 'Quiz settings updated successfully'})
+
+@app.route('/quiz/<int:quiz_id>/answers')
+def view_quiz_answers(quiz_id):
+    quiz = get_quiz_by_id(quiz_id)
+    if not quiz:
+        flash('Quiz not found.', 'error')
+        return redirect(url_for('index'))
+
+    # Check if answers are public or user is admin
+    if not quiz['show_answers_public'] and 'user_id' not in session:
+        flash('Quiz answers are not publicly available.', 'error')
+        return redirect(url_for('index'))
+
+    questions = get_questions_by_quiz_id(quiz_id)
+    return render_template('quiz_answers.html', quiz=quiz, questions=questions)
+
+@app.route('/quiz/<int:quiz_id>/download-answers')
+def download_quiz_answers(quiz_id):
+    quiz = get_quiz_by_id(quiz_id)
+    if not quiz:
+        return jsonify({'error': 'Quiz not found'}), 404
+
+    # Check if answers are public or user is admin
+    if not quiz['show_answers_public'] and 'user_id' not in session:
+        return jsonify({'error': 'Quiz answers are not publicly available'}), 403
+
+    questions = get_questions_by_quiz_id(quiz_id)
+    if not questions:
+        return jsonify({'error': 'No questions found'}), 404
+
+    # Generate PDF
+    pdf_data = generate_quiz_answers_pdf(quiz, questions)
+
+    # Create response
+    response = make_response(pdf_data)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename="{quiz["name"]}_answers.pdf"'
+
+    return response
 
 if __name__ == '__main__':
     app.run(debug=True)

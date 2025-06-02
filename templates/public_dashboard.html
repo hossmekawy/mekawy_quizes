@@ -54,7 +54,7 @@
         <!-- Available Quizzes -->
         <div class="bg-white rounded-lg shadow-lg p-6 sm:p-8">
             <h3 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">Available Quizzes</h3>
-            
+
             {% if quizzes %}
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {% for quiz in quizzes %}
@@ -67,11 +67,11 @@
                             </span>
                         </div>
                     </div>
-                    
+
                     {% if quiz.description %}
                     <p class="text-gray-600 text-sm sm:text-base mb-4 line-clamp-3">{{ quiz.description }}</p>
                     {% endif %}
-                    
+
                     <div class="flex items-center justify-between text-xs sm:text-sm text-gray-500 mb-4">
                         <span>Created: {{ quiz.created_at[:10] }}</span>
                         <span class="flex items-center">
@@ -81,11 +81,19 @@
                             ~15 min
                         </span>
                     </div>
-                    
-                    <a href="/quiz/{{ quiz.id }}/take" 
-                       class="block w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white text-center py-3 px-4 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                        Start Quiz
-                    </a>
+
+                    <div class="space-y-2">
+                        <a href="/quiz/{{ quiz.id }}/take"
+                           class="block w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white text-center py-3 px-4 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                            Start Quiz
+                        </a>
+                        {% if quiz.show_answers_public %}
+                        <a href="/quiz/{{ quiz.id }}/answers"
+                           class="block w-full bg-gradient-to-r from-green-600 to-green-700 text-white text-center py-2 px-4 rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 font-medium text-sm">
+                            📋 View Answers
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
                 {% endfor %}
             </div>
@@ -117,7 +125,7 @@
                     <h4 class="font-semibold text-gray-900 mb-2">Instant Feedback</h4>
                     <p class="text-gray-600 text-sm">Get immediate results and explanations for each question</p>
                 </div>
-                
+
                 <div class="text-center">
                     <div class="bg-green-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                         <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,7 +135,7 @@
                     <h4 class="font-semibold text-gray-900 mb-2">Mobile Optimized</h4>
                     <p class="text-gray-600 text-sm">Perfect experience on any device, anywhere</p>
                 </div>
-                
+
                 <div class="text-center">
                     <div class="bg-purple-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                         <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,7 +145,7 @@
                     <h4 class="font-semibold text-gray-900 mb-2">No Registration</h4>
                     <p class="text-gray-600 text-sm">Start taking quizzes immediately, no sign-up required</p>
                 </div>
-                
+
                 <div class="text-center">
                     <div class="bg-yellow-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                         <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -28,6 +28,13 @@ A Flask-based quiz application that allows you to create and manage multiple qui
 - **Secure Sessions**: Session-based authentication with password hashing
 - **Default Admin Account**: Username: `admin`, Password: `admin123`
 
+### 📄 **Premium PDF Generation**
+- **Professional Answer Keys**: Generate beautiful, premium-looking PDF answer sheets
+- **Complete Explanations**: Include detailed explanations for each question
+- **Branded Design**: Professional layout with colors, tables, and typography
+- **Public/Private Control**: Admin can control whether answers are publicly accessible
+- **Instant Download**: One-click PDF download with proper formatting
+
 ## Installation
 
 1. **Clone or download the project files**
