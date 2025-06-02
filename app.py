@@ -1,8 +1,13 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, make_response
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, make_response, send_file
 import pandas as pd
 import re
 import os
 import sqlite3
+import json
+import uuid
+import shutil
+import tempfile
+from urllib.parse import quote
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
@@ -44,6 +49,29 @@ def init_db():
     # Add show_answers_public column to existing quizzes table if it doesn't exist
     try:
         cursor.execute('ALTER TABLE quizzes ADD COLUMN show_answers_public BOOLEAN DEFAULT FALSE')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+
+    # Create quiz_attempts table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS quiz_attempts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            quiz_id INTEGER NOT NULL,
+            user_id TEXT NOT NULL,
+            user_name TEXT,
+            score INTEGER NOT NULL,
+            total_questions INTEGER NOT NULL,
+            percentage REAL NOT NULL,
+            time_taken INTEGER,
+            completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            user_answers TEXT,
+            FOREIGN KEY (quiz_id) REFERENCES quizzes (id) ON DELETE CASCADE
+        )
+    ''')
+
+    # Add user_name column to existing quiz_attempts table if it doesn't exist
+    try:
+        cursor.execute('ALTER TABLE quiz_attempts ADD COLUMN user_name TEXT')
     except sqlite3.OperationalError:
         pass  # Column already exists
 
@@ -183,6 +211,193 @@ def update_quiz_settings(quiz_id, show_answers_public):
     )
     conn.commit()
     conn.close()
+
+def update_question(question_db_id, question_data):
+    conn = get_db_connection()
+    conn.execute(
+        '''UPDATE questions
+           SET question_text = ?, option_a = ?, option_b = ?, option_c = ?, option_d = ?,
+               correct_answer = ?, explanation = ?
+           WHERE id = ?''',
+        (question_data['question'], question_data['option_a'],
+         question_data['option_b'], question_data['option_c'], question_data['option_d'],
+         question_data['correct_answer'], question_data.get('explanation', ''), question_db_id)
+    )
+    conn.commit()
+    conn.close()
+
+def get_question_by_id(question_db_id):
+    conn = get_db_connection()
+    question = conn.execute('SELECT * FROM questions WHERE id = ?', (question_db_id,)).fetchone()
+    conn.close()
+    return dict(question) if question else None
+
+def save_quiz_attempt(quiz_id, user_id, user_name, score, total_questions, percentage, time_taken, user_answers):
+    conn = get_db_connection()
+    conn.execute(
+        '''INSERT INTO quiz_attempts
+           (quiz_id, user_id, user_name, score, total_questions, percentage, time_taken, user_answers)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+        (quiz_id, user_id, user_name, score, total_questions, percentage, time_taken, json.dumps(user_answers))
+    )
+    conn.commit()
+    conn.close()
+
+def get_quiz_attempts(quiz_id):
+    conn = get_db_connection()
+    attempts = conn.execute(
+        '''SELECT * FROM quiz_attempts
+           WHERE quiz_id = ?
+           ORDER BY completed_at DESC''',
+        (quiz_id,)
+    ).fetchall()
+    conn.close()
+    return [dict(attempt) for attempt in attempts]
+
+def get_all_quiz_attempts():
+    conn = get_db_connection()
+    attempts = conn.execute(
+        '''SELECT qa.*, q.name as quiz_name
+           FROM quiz_attempts qa
+           JOIN quizzes q ON qa.quiz_id = q.id
+           ORDER BY qa.completed_at DESC'''
+    ).fetchall()
+    conn.close()
+    return [dict(attempt) for attempt in attempts]
+
+def get_quiz_statistics(quiz_id):
+    conn = get_db_connection()
+
+    # Get basic stats
+    stats = conn.execute(
+        '''SELECT
+           COUNT(*) as total_attempts,
+           AVG(percentage) as avg_percentage,
+           MAX(percentage) as max_percentage,
+           MIN(percentage) as min_percentage,
+           AVG(time_taken) as avg_time
+           FROM quiz_attempts
+           WHERE quiz_id = ?''',
+        (quiz_id,)
+    ).fetchone()
+
+    # Get score distribution
+    distribution = conn.execute(
+        '''SELECT
+           CASE
+               WHEN percentage >= 90 THEN 'A (90-100%)'
+               WHEN percentage >= 80 THEN 'B (80-89%)'
+               WHEN percentage >= 70 THEN 'C (70-79%)'
+               WHEN percentage >= 60 THEN 'D (60-69%)'
+               ELSE 'F (Below 60%)'
+           END as grade,
+           COUNT(*) as count
+           FROM quiz_attempts
+           WHERE quiz_id = ?
+           GROUP BY
+           CASE
+               WHEN percentage >= 90 THEN 'A (90-100%)'
+               WHEN percentage >= 80 THEN 'B (80-89%)'
+               WHEN percentage >= 70 THEN 'C (70-79%)'
+               WHEN percentage >= 60 THEN 'D (60-69%)'
+               ELSE 'F (Below 60%)'
+           END
+           ORDER BY
+           CASE
+               WHEN percentage >= 90 THEN 1
+               WHEN percentage >= 80 THEN 2
+               WHEN percentage >= 70 THEN 3
+               WHEN percentage >= 60 THEN 4
+               ELSE 5
+           END''',
+        (quiz_id,)
+    ).fetchall()
+
+    conn.close()
+
+    return {
+        'basic': dict(stats) if stats else {},
+        'distribution': [dict(row) for row in distribution]
+    }
+
+def export_database():
+    """Create a backup of the current database"""
+    try:
+        # Create a temporary file for the backup
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_filename = f'quiz_backup_{timestamp}.db'
+        backup_path = os.path.join(tempfile.gettempdir(), backup_filename)
+
+        # Copy the database file
+        shutil.copy2(app.config['DATABASE'], backup_path)
+
+        return backup_path, backup_filename
+    except Exception as e:
+        print(f"Error exporting database: {str(e)}")
+        return None, None
+
+def import_database(file_path):
+    """Import a database backup"""
+    try:
+        # Validate the uploaded file is a valid SQLite database
+        conn = sqlite3.connect(file_path)
+        cursor = conn.cursor()
+
+        # Check if it has the expected tables
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = [row[0] for row in cursor.fetchall()]
+        expected_tables = ['users', 'quizzes', 'questions', 'quiz_attempts']
+
+        if not all(table in tables for table in expected_tables):
+            conn.close()
+            return False, "Invalid database file: missing required tables"
+
+        conn.close()
+
+        # Create backup of current database
+        current_backup_path = app.config['DATABASE'] + '.backup'
+        shutil.copy2(app.config['DATABASE'], current_backup_path)
+
+        # Replace current database with imported one
+        shutil.copy2(file_path, app.config['DATABASE'])
+
+        return True, "Database imported successfully"
+
+    except Exception as e:
+        return False, f"Error importing database: {str(e)}"
+
+def get_database_stats():
+    """Get statistics about the current database"""
+    try:
+        conn = get_db_connection()
+
+        stats = {}
+
+        # Count tables
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = [row[0] for row in cursor.fetchall()]
+        stats['tables'] = len(tables)
+
+        # Count records in each table
+        for table in ['users', 'quizzes', 'questions', 'quiz_attempts']:
+            try:
+                cursor.execute(f"SELECT COUNT(*) FROM {table}")
+                stats[table] = cursor.fetchone()[0]
+            except:
+                stats[table] = 0
+
+        # Get database file size
+        db_size = os.path.getsize(app.config['DATABASE'])
+        stats['file_size'] = db_size
+        stats['file_size_mb'] = round(db_size / (1024 * 1024), 2)
+
+        conn.close()
+        return stats
+
+    except Exception as e:
+        print(f"Error getting database stats: {str(e)}")
+        return {}
 
 # Initialize database on startup
 init_db()
@@ -630,6 +845,287 @@ def delete_question_route(question_db_id):
     delete_question(question_db_id)
     return jsonify({'success': True, 'message': 'Question deleted'})
 
+@app.route('/question/<int:question_db_id>', methods=['GET'])
+@login_required
+def get_question_route(question_db_id):
+    question = get_question_by_id(question_db_id)
+    if not question:
+        return jsonify({'success': False, 'message': 'Question not found'})
+
+    # Format question for frontend
+    formatted_question = {
+        'id': question['id'],
+        'question': question['question_text'],
+        'option_a': question['option_a'],
+        'option_b': question['option_b'],
+        'option_c': question['option_c'],
+        'option_d': question['option_d'],
+        'correct_answer': question['correct_answer'],
+        'explanation': question['explanation'] or ''
+    }
+
+    return jsonify({'success': True, 'question': formatted_question})
+
+@app.route('/question/<int:question_db_id>', methods=['PUT'])
+@login_required
+def update_question_route(question_db_id):
+    data = request.json
+
+    # Verify question exists
+    question = get_question_by_id(question_db_id)
+    if not question:
+        return jsonify({'success': False, 'message': 'Question not found'})
+
+    try:
+        update_question(question_db_id, data)
+        return jsonify({'success': True, 'message': 'Question updated successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error updating question: {str(e)}'})
+
+@app.route('/quiz/<int:quiz_id>/start', methods=['POST'])
+def start_quiz(quiz_id):
+    try:
+        # Handle both JSON and form data
+        if request.is_json:
+            data = request.json
+        else:
+            data = request.form.to_dict()
+
+        user_name = data.get('user_name', '').strip()
+
+        if not user_name:
+            return jsonify({'success': False, 'message': 'Name is required'})
+
+        # Verify quiz exists
+        quiz = get_quiz_by_id(quiz_id)
+        if not quiz:
+            return jsonify({'success': False, 'message': 'Quiz not found'})
+
+        # Generate session ID
+        session_id = f"quiz_{quiz_id}_{int(datetime.now().timestamp())}_{abs(hash(user_name)) % 10000}"
+
+        # Store quiz session in Flask session
+        session[f'quiz_session_{quiz_id}'] = {
+            'session_id': session_id,
+            'user_name': user_name,
+            'current_question': 1,
+            'answers': {},
+            'start_time': datetime.now().isoformat(),
+            'quiz_id': quiz_id
+        }
+
+        # Mark session as modified to ensure it's saved
+        session.modified = True
+
+        return jsonify({
+            'success': True,
+            'session_id': session_id,
+            'user_name': user_name
+        })
+
+    except Exception as e:
+        print(f"Error starting quiz: {str(e)}")
+        return jsonify({'success': False, 'message': f'Server error: {str(e)}'})
+
+@app.route('/quiz/<int:quiz_id>/session', methods=['GET'])
+def get_quiz_session(quiz_id):
+    try:
+        session_key = f'quiz_session_{quiz_id}'
+        if session_key in session:
+            return jsonify({
+                'success': True,
+                'session': session[session_key]
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'No active session found'
+            })
+    except Exception as e:
+        print(f"Error getting session: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'Session error'
+        })
+
+@app.route('/quiz/<int:quiz_id>/session', methods=['POST'])
+def update_quiz_session(quiz_id):
+    try:
+        # Handle both JSON and form data
+        if request.is_json:
+            data = request.json
+        else:
+            data = request.form.to_dict()
+
+        session_key = f'quiz_session_{quiz_id}'
+
+        if session_key in session:
+            # Update session data
+            session[session_key]['current_question'] = data.get('current_question', session[session_key]['current_question'])
+            session[session_key]['answers'] = data.get('answers', session[session_key]['answers'])
+            session.modified = True
+
+            print(f"Session updated for quiz {quiz_id}: question {data.get('current_question')}, answers: {len(data.get('answers', {}))}")
+
+            return jsonify({'success': True})
+        else:
+            print(f"No active session found for quiz {quiz_id}")
+            return jsonify({'success': False, 'message': 'No active session found'})
+
+    except Exception as e:
+        print(f"Error updating session: {str(e)}")
+        return jsonify({'success': False, 'message': f'Session update error: {str(e)}'})
+
+@app.route('/quiz/<int:quiz_id>/submit', methods=['POST'])
+def submit_quiz(quiz_id):
+    data = request.json
+
+    # Verify quiz exists
+    quiz = get_quiz_by_id(quiz_id)
+    if not quiz:
+        return jsonify({'success': False, 'message': 'Quiz not found'})
+
+    # Get quiz questions for validation
+    questions = get_questions_by_quiz_id(quiz_id)
+    if not questions:
+        return jsonify({'success': False, 'message': 'No questions found'})
+
+    # Get session data
+    session_key = f'quiz_session_{quiz_id}'
+    quiz_session = session.get(session_key, {})
+
+    # Calculate score
+    user_answers = data.get('answers', {})
+    score = 0
+    total_questions = len(questions)
+
+    for question in questions:
+        user_answer = user_answers.get(str(question['id']))
+        if user_answer == question['correct_answer']:
+            score += 1
+
+    percentage = (score / total_questions) * 100 if total_questions > 0 else 0
+    time_taken = data.get('time_taken', 0)  # in seconds
+    user_id = quiz_session.get('session_id', f'anonymous_{int(datetime.now().timestamp())}')
+    user_name = quiz_session.get('user_name', 'Anonymous')
+
+    # Save attempt to database
+    save_quiz_attempt(quiz_id, user_id, user_name, score, total_questions, percentage, time_taken, user_answers)
+
+    # Clear session after submission
+    if session_key in session:
+        del session[session_key]
+
+    return jsonify({
+        'success': True,
+        'score': score,
+        'total': total_questions,
+        'percentage': round(percentage, 1),
+        'user_id': user_id,
+        'user_name': user_name
+    })
+
+@app.route('/quiz/<int:quiz_id>/analytics')
+@login_required
+def quiz_analytics(quiz_id):
+    quiz = get_quiz_by_id(quiz_id)
+    if not quiz:
+        flash('Quiz not found.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    attempts = get_quiz_attempts(quiz_id)
+    statistics = get_quiz_statistics(quiz_id)
+
+    return render_template('quiz_analytics.html',
+                         quiz=quiz,
+                         attempts=attempts,
+                         statistics=statistics)
+
+@app.route('/admin/analytics')
+@login_required
+def admin_analytics():
+    all_attempts = get_all_quiz_attempts()
+    quizzes = get_all_quizzes()
+
+    # Calculate overall statistics
+    total_attempts = len(all_attempts)
+    avg_score = sum(attempt['percentage'] for attempt in all_attempts) / total_attempts if total_attempts > 0 else 0
+
+    return render_template('admin_analytics.html',
+                         attempts=all_attempts,
+                         quizzes=quizzes,
+                         total_attempts=total_attempts,
+                         avg_score=round(avg_score, 1))
+
+@app.route('/admin/database')
+@login_required
+def database_management():
+    stats = get_database_stats()
+    return render_template('database_management.html', stats=stats)
+
+@app.route('/admin/database/export')
+@login_required
+def export_database_route():
+    backup_path, backup_filename = export_database()
+
+    if backup_path:
+        try:
+            return send_file(
+                backup_path,
+                as_attachment=True,
+                download_name=backup_filename,
+                mimetype='application/octet-stream'
+            )
+        except Exception as e:
+            flash(f'Error downloading backup: {str(e)}', 'error')
+            return redirect(url_for('database_management'))
+    else:
+        flash('Error creating database backup', 'error')
+        return redirect(url_for('database_management'))
+
+@app.route('/admin/database/import', methods=['POST'])
+@login_required
+def import_database_route():
+    if 'file' not in request.files:
+        flash('No file selected', 'error')
+        return redirect(url_for('database_management'))
+
+    file = request.files['file']
+    if file.filename == '':
+        flash('No file selected', 'error')
+        return redirect(url_for('database_management'))
+
+    if file and file.filename.endswith('.db'):
+        try:
+            # Save uploaded file temporarily
+            filename = secure_filename(file.filename)
+            temp_path = os.path.join(tempfile.gettempdir(), filename)
+            file.save(temp_path)
+
+            # Import the database
+            success, message = import_database(temp_path)
+
+            # Clean up temporary file
+            os.remove(temp_path)
+
+            if success:
+                flash(message, 'success')
+            else:
+                flash(message, 'error')
+
+        except Exception as e:
+            flash(f'Error importing database: {str(e)}', 'error')
+    else:
+        flash('Please upload a valid .db file', 'error')
+
+    return redirect(url_for('database_management'))
+
+@app.route('/admin/database/stats')
+@login_required
+def database_stats_api():
+    stats = get_database_stats()
+    return jsonify(stats)
+
 @app.route('/quiz/<int:quiz_id>/settings', methods=['POST'])
 @login_required
 def update_quiz_settings_route(quiz_id):
@@ -676,12 +1172,28 @@ def download_quiz_answers(quiz_id):
     # Generate PDF
     pdf_data = generate_quiz_answers_pdf(quiz, questions)
 
-    # Create response
+    # Create a safe filename by removing/replacing problematic characters
+    safe_filename = re.sub(r'[^\w\s-]', '', quiz['name']).strip()
+    safe_filename = re.sub(r'[-\s]+', '-', safe_filename)
+    if not safe_filename:  # If name becomes empty after cleaning
+        safe_filename = f'quiz_{quiz_id}'
+
+    # Create response with proper encoding handling
     response = make_response(pdf_data)
     response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = f'attachment; filename="{quiz["name"]}_answers.pdf"'
+
+    # Use RFC 5987 encoding for non-ASCII filenames
+    filename = f'{safe_filename}_answers.pdf'
+    try:
+        # Try ASCII encoding first
+        filename.encode('ascii')
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+    except UnicodeEncodeError:
+        # Use RFC 5987 encoding for non-ASCII characters
+        encoded_filename = quote(filename, safe='')
+        response.headers['Content-Disposition'] = f"attachment; filename*=UTF-8''{encoded_filename}"
 
     return response
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)

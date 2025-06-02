@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Management - Quiz Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Mobile-first Navigation -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-lg sm:text-xl font-bold text-gray-900">Database Management</h1>
+                </div>
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <a href="/admin" class="text-blue-600 hover:text-blue-800 text-sm sm:text-base">Dashboard</a>
+                    <a href="/logout" class="text-red-600 hover:text-red-800 text-sm sm:text-base">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-6">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'success' if category == 'success' else 'error' }} mb-4 p-4 rounded-lg {% if category == 'success' %}bg-green-100 border border-green-400 text-green-700{% else %}bg-red-100 border border-red-400 text-red-700{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
+            <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Database Management</h2>
+            <p class="text-gray-600">Export, import, and manage your quiz database</p>
+        </div>
+
+        <!-- Database Statistics -->
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
+            <h3 class="text-xl font-semibold mb-4">Database Statistics</h3>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-blue-50 rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-blue-600 mb-2">{{ stats.quizzes or 0 }}</div>
+                    <div class="text-sm text-gray-600">Quizzes</div>
+                </div>
+                <div class="bg-green-50 rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-green-600 mb-2">{{ stats.questions or 0 }}</div>
+                    <div class="text-sm text-gray-600">Questions</div>
+                </div>
+                <div class="bg-purple-50 rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-purple-600 mb-2">{{ stats.quiz_attempts or 0 }}</div>
+                    <div class="text-sm text-gray-600">Quiz Attempts</div>
+                </div>
+                <div class="bg-orange-50 rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-orange-600 mb-2">{{ stats.file_size_mb or 0 }} MB</div>
+                    <div class="text-sm text-gray-600">Database Size</div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg p-4">
+                <h4 class="font-medium text-gray-800 mb-2">Database Information</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-600">Tables:</span>
+                        <span class="font-medium">{{ stats.tables or 0 }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Users:</span>
+                        <span class="font-medium">{{ stats.users or 0 }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">File Size:</span>
+                        <span class="font-medium">{{ stats.file_size or 0 }} bytes</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Last Updated:</span>
+                        <span class="font-medium" id="last-updated">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Section -->
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
+            <h3 class="text-xl font-semibold mb-4">Export Database</h3>
+            <p class="text-gray-600 mb-6">Create a backup of your entire database including all quizzes, questions, and user attempts.</p>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-blue-400 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                    <div>
+                        <h4 class="text-sm font-medium text-blue-800">Export Information</h4>
+                        <ul class="text-sm text-blue-700 mt-1 space-y-1">
+                            <li>• Creates a complete backup of your database</li>
+                            <li>• Includes all quizzes, questions, and user attempts</li>
+                            <li>• File will be named with current timestamp</li>
+                            <li>• Can be used to restore data later</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <a href="/admin/database/export" 
+               class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Export Database
+            </a>
+        </div>
+
+        <!-- Import Section -->
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <h3 class="text-xl font-semibold mb-4">Import Database</h3>
+            <p class="text-gray-600 mb-6">Restore your database from a previously exported backup file.</p>
+            
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-red-400 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <div>
+                        <h4 class="text-sm font-medium text-red-800">⚠️ Important Warning</h4>
+                        <ul class="text-sm text-red-700 mt-1 space-y-1">
+                            <li>• This will REPLACE your current database completely</li>
+                            <li>• All existing data will be lost</li>
+                            <li>• A backup of current database will be created automatically</li>
+                            <li>• Only upload .db files exported from this system</li>
+                            <li>• Make sure to export current data before importing</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <form action="/admin/database/import" method="post" enctype="multipart/form-data" class="space-y-4">
+                <div>
+                    <label for="database-file" class="block text-sm font-medium text-gray-700 mb-2">
+                        Select Database File (.db)
+                    </label>
+                    <input type="file" 
+                           id="database-file" 
+                           name="file" 
+                           accept=".db"
+                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                           required>
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" 
+                           id="confirm-import" 
+                           class="rounded border-gray-300 text-red-600 shadow-sm focus:border-red-300 focus:ring focus:ring-red-200 focus:ring-opacity-50"
+                           required>
+                    <label for="confirm-import" class="ml-2 text-sm text-gray-700">
+                        I understand that this will replace all current data
+                    </label>
+                </div>
+                
+                <button type="submit" 
+                        class="inline-flex items-center px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+                    </svg>
+                    Import Database
+                </button>
+            </form>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="mt-8 bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <h3 class="text-xl font-semibold mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <a href="/admin" 
+                   class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <svg class="w-8 h-8 text-gray-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h0a2 2 0 012 2v0H8v0z"></path>
+                    </svg>
+                    <div>
+                        <div class="font-medium text-gray-900">Admin Dashboard</div>
+                        <div class="text-sm text-gray-600">Manage quizzes</div>
+                    </div>
+                </a>
+                
+                <a href="/admin/analytics" 
+                   class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <svg class="w-8 h-8 text-gray-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    <div>
+                        <div class="font-medium text-gray-900">Analytics</div>
+                        <div class="text-sm text-gray-600">View statistics</div>
+                    </div>
+                </a>
+                
+                <button onclick="refreshStats()" 
+                        class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <svg class="w-8 h-8 text-gray-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <div>
+                        <div class="font-medium text-gray-900">Refresh Stats</div>
+                        <div class="text-sm text-gray-600">Update database info</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set last updated time
+        document.getElementById('last-updated').textContent = new Date().toLocaleString();
+        
+        // Refresh statistics
+        function refreshStats() {
+            fetch('/admin/database/stats')
+            .then(response => response.json())
+            .then(data => {
+                // Update the page with new stats
+                location.reload();
+            })
+            .catch(error => {
+                console.error('Error refreshing stats:', error);
+                alert('Error refreshing statistics');
+            });
+        }
+        
+        // Confirm import action
+        document.querySelector('form[action="/admin/database/import"]').addEventListener('submit', function(e) {
+            if (!confirm('Are you absolutely sure you want to replace the current database? This action cannot be undone!')) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

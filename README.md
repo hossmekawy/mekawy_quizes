@@ -13,7 +13,9 @@ A Flask-based quiz application that allows you to create and manage multiple qui
 - **Manual Entry**: Add questions one by one through a web form
 - **File Upload**: Upload questions from CSV or Excel files
 - **Text Parsing**: Paste questions in a specific text format and automatically parse them
-- **Question Management**: View, edit, and delete existing questions
+- **Full CRUD Operations**: Create, Read, Update, and Delete questions
+- **Inline Editing**: Edit questions directly from the management interface
+- **Real-time Updates**: Changes are immediately reflected in the quiz
 
 ### 🎮 **Interactive Quiz Interface**
 - **Question-by-Question Display**: Shows one question at a time
@@ -34,6 +36,24 @@ A Flask-based quiz application that allows you to create and manage multiple qui
 - **Branded Design**: Professional layout with colors, tables, and typography
 - **Public/Private Control**: Admin can control whether answers are publicly accessible
 - **Instant Download**: One-click PDF download with proper formatting
+
+### 📊 **Quiz Analytics & Tracking**
+- **Automatic Attempt Tracking**: Records all quiz attempts with unique user IDs
+- **User Name Collection**: Collects user names for better identification
+- **Session Persistence**: Quiz progress is saved and restored on page refresh
+- **No Authentication Required**: Users can take quizzes without signing up
+- **Comprehensive Analytics**: View detailed statistics and performance data
+- **Visual Charts**: Interactive graphs showing score distribution and trends
+- **Admin Dashboard**: Centralized view of all quiz attempts across the system
+- **Individual Quiz Analytics**: Detailed performance data for each quiz
+
+### 💾 **Database Management**
+- **Complete Database Export**: Create full backups of your entire quiz system
+- **Database Import**: Restore from previously exported backup files
+- **Automatic Backup**: Current database is backed up before importing
+- **Data Validation**: Ensures imported files are valid quiz databases
+- **Database Statistics**: View detailed information about your database
+- **Safe Operations**: Built-in safeguards and confirmation prompts
 
 ## Installation
 
@@ -115,15 +135,71 @@ A Flask-based quiz application that allows you to create and manage multiple qui
 3. The system will automatically parse and determine correct answers
 
 ### Taking the Quiz
-1. Click "View Quiz" from the admin panel or go to `/quiz`
-2. Answer questions one by one
-3. Get immediate feedback on wrong answers
-4. View your final score at the end
+1. **Enter Your Name**: When starting a quiz, you'll be prompted to enter your name
+2. **Session Persistence**: Your progress is automatically saved - you can refresh the page and continue where you left off
+3. **Answer Questions**: Navigate through questions one by one
+4. **Immediate Feedback**: Get instant feedback on wrong answers with correct answer explanations
+5. **Complete Quiz**: View your final score with your name and unique session ID
 
 ### Managing Questions
 1. Go to the "Manage Questions" tab
 2. View all questions with their correct answers highlighted
-3. Delete individual questions or clear all questions
+3. **Edit questions**: Click the edit icon (pencil) to modify any question
+4. **Delete questions**: Click the delete icon (trash) to remove individual questions
+5. **Clear all**: Use "Clear All Questions" to remove all questions at once
+
+#### Editing Questions
+- Click the blue edit icon next to any question
+- Modify question text, options, correct answer, or explanation
+- Changes are saved immediately and reflected in the quiz
+- Modal interface provides easy form-based editing
+
+### Viewing Analytics
+
+#### Quiz-Specific Analytics
+1. Go to any quiz admin panel
+2. Click "📊 Analytics" in the navigation
+3. View detailed statistics including:
+   - Total attempts and average scores
+   - Score distribution charts
+   - Performance trends over time
+   - Individual attempt details with user IDs
+
+#### System-Wide Analytics
+1. From the admin dashboard, click "📊 Analytics"
+2. View overall system statistics:
+   - Total quizzes and attempts across all quizzes
+   - Average performance metrics
+   - Recent activity across all quizzes
+   - Quiz performance comparison charts
+
+### Quiz Attempt Tracking
+- **Automatic Tracking**: Every quiz completion is automatically recorded
+- **Unique User IDs**: Each attempt gets a unique identifier (no login required)
+- **Comprehensive Data**: Tracks score, percentage, time taken, and answers
+- **Real-time Analytics**: Data is immediately available in admin dashboards
+- **Visual Charts**: Interactive graphs powered by Chart.js
+
+### Database Management
+
+#### Exporting Database
+1. Go to admin dashboard and click "💾 Database"
+2. Click "Export Database" button
+3. A timestamped .db file will be downloaded
+4. This file contains your complete quiz system backup
+
+#### Importing Database
+1. Go to Database Management page
+2. Select a previously exported .db file
+3. Check the confirmation checkbox
+4. Click "Import Database"
+5. **Warning**: This replaces all current data
+
+#### Database Statistics
+- View total quizzes, questions, and attempts
+- Monitor database file size
+- See table counts and other metrics
+- Refresh statistics in real-time
 
 ## Text Format for Parsing
 

@@ -15,6 +15,8 @@
                     <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Admin Dashboard</h1>
                 </div>
                 <div class="flex items-center space-x-2 sm:space-x-4">
+                    <a href="/admin/analytics" class="text-purple-600 hover:text-purple-800 text-sm sm:text-base">📊 Analytics</a>
+                    <a href="/admin/database" class="text-green-600 hover:text-green-800 text-sm sm:text-base">💾 Database</a>
                     <a href="/" class="text-gray-600 hover:text-gray-900 text-sm sm:text-base">Public View</a>
                     <a href="/logout" class="bg-red-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg hover:bg-red-700 transition-colors text-sm sm:text-base">
                         Logout
@@ -79,12 +81,17 @@
                         Created: {{ quiz.created_at[:10] }}
                     </div>
 
-                    <div class="flex flex-col sm:flex-row gap-2">
-                        <a href="/quiz/{{ quiz.id }}/admin" class="flex-1 bg-blue-600 text-white text-center py-2.5 px-3 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
-                            Manage Questions
-                        </a>
-                        <a href="/quiz/{{ quiz.id }}/take" class="flex-1 bg-green-600 text-white text-center py-2.5 px-3 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium">
-                            Take Quiz
+                    <div class="flex flex-col gap-2">
+                        <div class="flex gap-2">
+                            <a href="/quiz/{{ quiz.id }}/admin" class="flex-1 bg-blue-600 text-white text-center py-2.5 px-3 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+                                Manage Questions
+                            </a>
+                            <a href="/quiz/{{ quiz.id }}/take" class="flex-1 bg-green-600 text-white text-center py-2.5 px-3 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium">
+                                Take Quiz
+                            </a>
+                        </div>
+                        <a href="/quiz/{{ quiz.id }}/analytics" class="w-full bg-purple-600 text-white text-center py-2 px-3 rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">
+                            📊 View Analytics
                         </a>
                     </div>
                 </div>

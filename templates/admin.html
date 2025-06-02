@@ -28,6 +28,7 @@
                 </div>
                 <div class="flex items-center space-x-2 sm:space-x-4">
                     <a href="/admin" class="text-gray-600 hover:text-gray-900 text-sm sm:text-base hidden sm:inline">Dashboard</a>
+                    <a href="/quiz/{{ quiz.id }}/analytics" class="text-purple-600 hover:text-purple-800 text-sm sm:text-base">📊 Analytics</a>
                     <a href="/quiz/{{ quiz.id }}/take" class="bg-green-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg hover:bg-green-700 transition-colors text-sm sm:text-base">
                         Take Quiz
                     </a>
@@ -196,11 +197,18 @@
                                 <p class="text-sm text-gray-600 mt-2"><strong>Explanation:</strong> {{ question.explanation }}</p>
                                 {% endif %}
                             </div>
-                            <button onclick="deleteQuestion({{ question.db_id }})" class="ml-4 text-red-600 hover:text-red-800">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </button>
+                            <div class="flex space-x-2 ml-4">
+                                <button onclick="editQuestion({{ question.db_id }})" class="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50 transition-colors" title="Edit Question">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                <button onclick="deleteQuestion({{ question.db_id }})" class="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50 transition-colors" title="Delete Question">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     {% endfor %}
@@ -274,6 +282,74 @@
 
         <!-- Messages -->
         <div id="messages" class="fixed top-4 right-4 z-50"></div>
+
+        <!-- Edit Question Modal -->
+        <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-semibold text-gray-900">Edit Question <span id="edit-question-number" class="text-blue-600"></span></h3>
+                    <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <form id="edit-question-form" class="space-y-4">
+                    <input type="hidden" id="edit-question-id">
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Question</label>
+                        <textarea id="edit-question-text" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Option A</label>
+                            <input type="text" id="edit-option-a" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Option B</label>
+                            <input type="text" id="edit-option-b" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Option C</label>
+                            <input type="text" id="edit-option-c" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Option D</label>
+                            <input type="text" id="edit-option-d" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Correct Answer</label>
+                            <select id="edit-correct-answer" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Select correct answer</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Explanation (Optional)</label>
+                            <input type="text" id="edit-explanation" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" onclick="closeEditModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                            Update Question
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -474,6 +550,85 @@
                 showMessage('Error saving settings', 'error');
             });
         }
+
+        function editQuestion(questionDbId) {
+            // Find the question number from the DOM
+            const questionElement = document.querySelector(`[data-question-id="${questionDbId}"]`);
+            const questionNumber = questionElement ? questionElement.querySelector('h3').textContent.match(/Question (\d+)/)[1] : '';
+
+            // Fetch question data
+            fetch(`/question/${questionDbId}`)
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    const question = result.question;
+
+                    // Update modal title with question number
+                    document.getElementById('edit-question-number').textContent = questionNumber ? `#${questionNumber}` : '';
+
+                    // Populate the edit form
+                    document.getElementById('edit-question-id').value = question.id;
+                    document.getElementById('edit-question-text').value = question.question;
+                    document.getElementById('edit-option-a').value = question.option_a;
+                    document.getElementById('edit-option-b').value = question.option_b;
+                    document.getElementById('edit-option-c').value = question.option_c;
+                    document.getElementById('edit-option-d').value = question.option_d;
+                    document.getElementById('edit-correct-answer').value = question.correct_answer;
+                    document.getElementById('edit-explanation').value = question.explanation;
+
+                    // Show the modal
+                    document.getElementById('edit-modal').classList.remove('hidden');
+                    document.getElementById('edit-modal').classList.add('flex');
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('Error loading question', 'error');
+            });
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+            document.getElementById('edit-modal').classList.remove('flex');
+        }
+
+        // Edit question form submission
+        document.getElementById('edit-question-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const questionId = document.getElementById('edit-question-id').value;
+            const data = {
+                question: document.getElementById('edit-question-text').value,
+                option_a: document.getElementById('edit-option-a').value,
+                option_b: document.getElementById('edit-option-b').value,
+                option_c: document.getElementById('edit-option-c').value,
+                option_d: document.getElementById('edit-option-d').value,
+                correct_answer: document.getElementById('edit-correct-answer').value,
+                explanation: document.getElementById('edit-explanation').value
+            };
+
+            fetch(`/question/${questionId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showMessage(result.message);
+                    closeEditModal();
+                    location.reload(); // Refresh to show updated question
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('Error updating question', 'error');
+            });
+        });
     </script>
 </body>
 </html>
